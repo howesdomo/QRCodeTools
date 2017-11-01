@@ -64,6 +64,7 @@ namespace QRCodeCreator
         void MainWindow_Closed(object sender, EventArgs e)
         {
             closeAllFrmViewImage();
+            deleteAllTempFile();
         }
 
         void txtQRCodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -164,14 +165,29 @@ namespace QRCodeCreator
             }
         }
 
+        /// <summary>
+        /// 条码图片临时存放路径
+        /// </summary>
+        string mTempDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HoweSoftware", "QRCodeCreator", "temp");
+
         private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
         {
-            IntPtr ip = bitmap.GetHbitmap(); // 从GDI+ Bitmap创建GDI位图对象
+            #region 使用内存不断累积, 并且无法回收
+            
+            //IntPtr ip = bitmap.GetHbitmap(); // 从GDI+ Bitmap创建GDI位图对象
+            //BitmapSource bitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, Int32Rect.Empty,
+            //System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
 
-            BitmapSource bitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, Int32Rect.Empty,
-            System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+            #endregion
 
-            return bitmapSource;
+            if (System.IO.Directory.Exists(mTempDirectory) == false)
+            {
+                System.IO.Directory.CreateDirectory(mTempDirectory);
+            }
+
+            string path = System.IO.Path.Combine(mTempDirectory, "{0}.png".FormatWith(Guid.NewGuid().ToString()));
+            bitmap.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            return new BitmapImage(new Uri(path, UriKind.Absolute)); // bitmapSource;
         }
 
 
@@ -209,6 +225,11 @@ namespace QRCodeCreator
             {
                 item.Close();
             }
+        }
+
+        private void deleteAllTempFile()
+        {
+            System.IO.Directory.Delete(this.mTempDirectory, true);
         }
     }
 
