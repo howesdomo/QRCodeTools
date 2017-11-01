@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Runtime.InteropServices;
 
 namespace QRCodeCreator
 {
@@ -27,6 +28,7 @@ namespace QRCodeCreator
 
             this.Title = "二维码生成器 - V {0}".FormatWith(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
+
             writer = new ZXing.BarcodeWriter();
 
             ZXing.QrCode.QrCodeEncodingOptions options = new ZXing.QrCode.QrCodeEncodingOptions
@@ -42,12 +44,16 @@ namespace QRCodeCreator
             writer.Options = options;
 
             initEvent();
+
+            this.txtQRCodeContent.AppendText("测试");
         }
 
         private void initEvent()
         {
             // UI
             this.txtQRCodeContent.SizeChanged += txtQRCodeContent_SizeChanged;
+            this.Closed += new EventHandler(MainWindow_Closed);
+            this.img.MouseDown += new MouseButtonEventHandler(img_MouseDown);
 
             // BusinessLogic
             this.txtQRCodeContent.TextChanged += txtQRCodeContent_TextChanged;
@@ -55,12 +61,17 @@ namespace QRCodeCreator
             this.cbCharacterSet.SelectionChanged += (o, e) => { optionChanged(); };
         }
 
+        void MainWindow_Closed(object sender, EventArgs e)
+        {
+            closeAllFrmViewImage();
+        }
+
         void txtQRCodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             this.Height = 462 + e.NewSize.Height - 21.84;
         }
 
-        private void optionChanged()
+        private Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string> getSelectedOptions()
         {
             ZXing.QrCode.Internal.ErrorCorrectionLevel ecl = ZXing.QrCode.Internal.ErrorCorrectionLevel.L;
 
@@ -80,21 +91,27 @@ namespace QRCodeCreator
                 }
             }
 
-            // string characterSet = "UTF-8";
-            string characterSet = "gb2312";
+            string characterSet = "UTF-8";
             if (cbCharacterSet.SelectedValue is ComboBoxItem)
             {
                 ComboBoxItem cbi = cbCharacterSet.SelectedValue as ComboBoxItem;
                 characterSet = cbi.Tag.ToString();
             }
 
+            return new Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string>(ecl, characterSet);
+        }
+
+        private void optionChanged()
+        {
+            Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string> item = getSelectedOptions();
+
             ZXing.QrCode.QrCodeEncodingOptions options = new ZXing.QrCode.QrCodeEncodingOptions
             {
                 DisableECI = true,
-                CharacterSet = characterSet,
+                CharacterSet = item.Item2,
                 Width = 870,
                 Height = 870,
-                ErrorCorrection = ecl
+                ErrorCorrection = item.Item1
             };
 
             writer.Options = options;
@@ -111,7 +128,7 @@ namespace QRCodeCreator
                 // 由于 RichTextBox 自带\r\n 故去掉2位
                 r = r.Substring(0, r.Length - 2);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 r = textRange.Text;
@@ -133,18 +150,66 @@ namespace QRCodeCreator
             }
             else
             {
-                return BitmapToBitmapImage(writer.Write(content));
+                QRCodeModel qrCodeModel = new QRCodeModel();
+                qrCodeModel.ID = Guid.NewGuid();
+                qrCodeModel.Content = content;
+                qrCodeModel.UpdatedTime = DateTime.Now;
+                qrCodeModel.ErrorCorrectionLevel = ZXing.QrCode.Internal.ErrorCorrectionLevel.L; // TODO :
+                qrCodeModel.CharacterSet = "UTF8";
+
+                System.Drawing.Bitmap bitmap = writer.Write(content);
+                BitmapSource r = BitmapToBitmapImage(bitmap);
+                bitmap.Dispose(); // TODO 进一步优化
+                return r;
             }
         }
 
         private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
         {
-            IntPtr ip = bitmap.GetHbitmap();//从GDI+ Bitmap创建GDI位图对象
+            IntPtr ip = bitmap.GetHbitmap(); // 从GDI+ Bitmap创建GDI位图对象
 
             BitmapSource bitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, Int32Rect.Empty,
             System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
 
             return bitmapSource;
         }
+
+
+        private List<FrmViewImage> mFrmViewImageList = new List<FrmViewImage>();
+
+        private DateTime? mouseDownDateTime = null;
+
+        void img_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (mouseDownDateTime.HasValue == true)
+            {
+                DateTime now = DateTime.Now;
+                double value = TimeSpan.FromTicks(now.Ticks).TotalMilliseconds - TimeSpan.FromTicks(mouseDownDateTime.Value.Ticks).TotalMilliseconds;
+                if (value.CompareTo(1000) < 0)
+                {
+                    mouseDownDateTime = null;
+
+                    // 获取当前鼠标位置
+                    Point mousePoint = Mouse.GetPosition(e.Source as FrameworkElement);
+
+                    FrmViewImage frm = new FrmViewImage(mousePoint.X + this.Top, mousePoint.Y + this.Left, this.getDocumentStringFormRichTextBox(this.txtQRCodeContent), ((BitmapSource)img.Source).CloneCurrentValue());
+                    mFrmViewImageList.Add(frm);
+                    frm.Show();
+
+                    return;
+                }
+            }
+
+            mouseDownDateTime = DateTime.Now;
+        }
+
+        private void closeAllFrmViewImage()
+        {
+            foreach (var item in mFrmViewImageList)
+            {
+                item.Close();
+            }
+        }
     }
+
 }
