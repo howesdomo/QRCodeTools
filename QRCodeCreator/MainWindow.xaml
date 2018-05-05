@@ -31,6 +31,8 @@
                 <ComboBoxItem Tag="gb2312">简体中文(GB-2312, 936)</ComboBoxItem>
                 <ComboBoxItem Tag="gb18030">简体中文(GB-18030)</ComboBoxItem>
             </ComboBox>
+
+            <Button x:Name="btnImportExcel">E</Button>
         </StackPanel>
     </Grid>
 </Window>

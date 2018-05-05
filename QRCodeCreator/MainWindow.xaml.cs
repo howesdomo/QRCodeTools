@@ -59,10 +59,13 @@ namespace QRCodeCreator
             this.txtQRCodeContent.TextChanged += txtQRCodeContent_TextChanged;
             this.cbErrorCorrectionLevel.SelectionChanged += (o, e) => { optionChanged(); };
             this.cbCharacterSet.SelectionChanged += (o, e) => { optionChanged(); };
+
+            this.btnImportExcel.Click += BtnImportExcel_Click;
         }
 
         void MainWindow_Closed(object sender, EventArgs e)
         {
+            this.img.Source = null;
             closeAllFrmViewImage();
             deleteAllTempFile();
         }
@@ -229,7 +232,16 @@ namespace QRCodeCreator
 
         private void deleteAllTempFile()
         {
+            
             System.IO.Directory.Delete(this.mTempDirectory, true);
+        }
+
+
+
+        private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
+        {
+            ImportExcel frm = new ImportExcel(this);
+            frm.Show();
         }
     }
 
