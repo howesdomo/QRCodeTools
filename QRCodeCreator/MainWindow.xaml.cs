@@ -55,12 +55,22 @@ namespace QRCodeCreator
             this.Closed += new EventHandler(MainWindow_Closed);
             this.img.MouseDown += new MouseButtonEventHandler(img_MouseDown);
 
+
+            this.Activated += MainWindow_Activated;
+            // this.LocationChanged += MainWindow_LocationChanged;
+
             // BusinessLogic
             this.txtQRCodeContent.TextChanged += txtQRCodeContent_TextChanged;
             this.cbErrorCorrectionLevel.SelectionChanged += (o, e) => { optionChanged(); };
             this.cbCharacterSet.SelectionChanged += (o, e) => { optionChanged(); };
 
             this.btnImportExcel.Click += BtnImportExcel_Click;
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            this.txtQRCodeContent.Focus();
+            this.txtQRCodeContent.SelectAll();
         }
 
         void MainWindow_Closed(object sender, EventArgs e)
@@ -176,7 +186,7 @@ namespace QRCodeCreator
         private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
         {
             #region 使用内存不断累积, 并且无法回收
-            
+
             //IntPtr ip = bitmap.GetHbitmap(); // 从GDI+ Bitmap创建GDI位图对象
             //BitmapSource bitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, Int32Rect.Empty,
             //System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
@@ -232,7 +242,6 @@ namespace QRCodeCreator
 
         private void deleteAllTempFile()
         {
-            
             System.IO.Directory.Delete(this.mTempDirectory, true);
         }
 
