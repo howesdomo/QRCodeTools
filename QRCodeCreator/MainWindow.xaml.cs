@@ -26,8 +26,7 @@ namespace QRCodeCreator
         {
             InitializeComponent();
 
-            this.Title = "二维码生成器 - V {0}".FormatWith(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
-
+            this.Title = $"二维码生成器 - V {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
 
             writer = new ZXing.BarcodeWriter();
 
@@ -198,7 +197,7 @@ namespace QRCodeCreator
                 System.IO.Directory.CreateDirectory(mTempDirectory);
             }
 
-            string path = System.IO.Path.Combine(mTempDirectory, "{0}.png".FormatWith(Guid.NewGuid().ToString()));
+            string path = System.IO.Path.Combine(mTempDirectory, $"{Guid.NewGuid().ToString()}.png");
             bitmap.Save(path, System.Drawing.Imaging.ImageFormat.Png);
             return new BitmapImage(new Uri(path, UriKind.Absolute)); // bitmapSource;
         }

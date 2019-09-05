@@ -1,9 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.88
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRCodeCreator", "QRCodeCreator\QRCodeCreator.csproj", "{0EF3B2B5-A237-4F32-909F-34ADFF3D25C2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util", "..\HoweUtil\Util\Util.csproj", "{3363DA83-F692-4367-B905-062451ACA009}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,18 +25,11 @@ Global
 		{0EF3B2B5-A237-4F32-909F-34ADFF3D25C2}.Release|Mixed Platforms.Build.0 = Release|x86
 		{0EF3B2B5-A237-4F32-909F-34ADFF3D25C2}.Release|x86.ActiveCfg = Release|x86
 		{0EF3B2B5-A237-4F32-909F-34ADFF3D25C2}.Release|x86.Build.0 = Release|x86
-		{3363DA83-F692-4367-B905-062451ACA009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{3363DA83-F692-4367-B905-062451ACA009}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8877E4D0-D4B6-43A0-AEE7-D85AA8715C0E}
 	EndGlobalSection
 EndGlobal

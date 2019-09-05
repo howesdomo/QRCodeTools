@@ -117,7 +117,7 @@ namespace QRCodeCreator
                 }
             }
 
-            Console.WriteLine("当前缩放比例 {0}".Format(currentScale));
+            Console.WriteLine($"当前缩放比例 {currentScale}");
 
             img.Width = mOrginalImage.Width * currentScale / 100;
             img.Height = mOrginalImage.Height * currentScale / 100;
@@ -202,7 +202,7 @@ namespace QRCodeCreator
             ms.Close();
 
             sw.Stop();
-            Console.WriteLine("用时 {0} 秒".Format(sw.Elapsed.Milliseconds / 1000));
+            Console.WriteLine($"用时 {sw.Elapsed.Milliseconds / 1000} 秒");
         }
 
     }
