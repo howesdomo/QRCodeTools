@@ -20,6 +20,8 @@ namespace QRCodeCreator
     /// </summary>
     public partial class MainWindow : Window
     {
+        // private static object _Input_Lock_ = new object();
+
         ZXing.BarcodeWriter writer;
 
         public MainWindow()
@@ -182,43 +184,23 @@ namespace QRCodeCreator
         /// </summary>
         string mTempDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HoweSoftware", "QRCodeCreator", "temp");
 
-        List<BitmapImage> mBitmapImageList = new List<BitmapImage>();
-
         private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
         {
-            #region 使用内存不断累积, 并且无法回收
-
-            //IntPtr ip = bitmap.GetHbitmap(); // 从GDI+ Bitmap创建GDI位图对象
-            //BitmapSource bitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, Int32Rect.Empty,
-            //System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-
-            #endregion
-
             if (System.IO.Directory.Exists(mTempDirectory) == false)
             {
                 System.IO.Directory.CreateDirectory(mTempDirectory);
             }
 
-            string path = System.IO.Path.Combine(mTempDirectory, $"{Guid.NewGuid().ToString()}.png");
-            bitmap.Save(path, System.Drawing.Imaging.ImageFormat.Png);
-
-            if (mBitmapImageList != null && mBitmapImageList.Count >0)
-            {
-                mBitmapImageList.Clear();
-            }
-
             BitmapImage bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
-            bitmapImage.UriSource = new Uri(path);
             bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            System.IO.MemoryStream ms = new System.IO.MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            bitmapImage.StreamSource = ms;
             bitmapImage.EndInit();
 
-            mBitmapImageList.Add(bitmapImage);
-
-            return // new BitmapImage(new Uri(path, UriKind.Absolute)); // bitmapSource;
-                bitmapImage;
+            return bitmapImage;
         }
-
 
         private List<FrmViewImage> mFrmViewImageList = new List<FrmViewImage>();
 
@@ -272,7 +254,7 @@ namespace QRCodeCreator
             }
         }
 
-
+        
 
         private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
         {
