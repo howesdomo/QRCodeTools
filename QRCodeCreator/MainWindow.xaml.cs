@@ -172,7 +172,7 @@ namespace QRCodeCreator
 
                 System.Drawing.Bitmap bitmap = writer.Write(content);
                 BitmapSource r = BitmapToBitmapImage(bitmap);
-                bitmap.Dispose(); // TODO 进一步优化
+                bitmap.Dispose();
                 return r;
             }
         }
@@ -181,6 +181,8 @@ namespace QRCodeCreator
         /// 条码图片临时存放路径
         /// </summary>
         string mTempDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HoweSoftware", "QRCodeCreator", "temp");
+
+        List<BitmapImage> mBitmapImageList = new List<BitmapImage>();
 
         private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
         {
@@ -199,7 +201,22 @@ namespace QRCodeCreator
 
             string path = System.IO.Path.Combine(mTempDirectory, $"{Guid.NewGuid().ToString()}.png");
             bitmap.Save(path, System.Drawing.Imaging.ImageFormat.Png);
-            return new BitmapImage(new Uri(path, UriKind.Absolute)); // bitmapSource;
+
+            if (mBitmapImageList != null && mBitmapImageList.Count >0)
+            {
+                mBitmapImageList.Clear();
+            }
+
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            bitmapImage.UriSource = new Uri(path);
+            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            bitmapImage.EndInit();
+
+            mBitmapImageList.Add(bitmapImage);
+
+            return // new BitmapImage(new Uri(path, UriKind.Absolute)); // bitmapSource;
+                bitmapImage;
         }
 
 
@@ -241,7 +258,18 @@ namespace QRCodeCreator
 
         private void deleteAllTempFile()
         {
-            System.IO.Directory.Delete(this.mTempDirectory, true);
+            foreach (var toDelete in System.IO.Directory.GetFiles(this.mTempDirectory))
+            {
+                try
+                {
+                    System.IO.File.Delete(toDelete); // TODO 解决文件占用的问题
+                }
+                catch (Exception ex)
+                {
+                    string msg = $"{ex.GetFullInfo()}";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                }
+            }
         }
 
 

@@ -34,10 +34,10 @@ namespace QRCodeCreator
 
         private void BtnImport_Click(object sender, RoutedEventArgs e)
         {
-            string path = @"D:\HoweDesktop\水路发运单.xlsx";
-            System.Data.DataTable dt = new System.Data.DataTable();
-            // System.Data.DataTable dt = Util.Excel.ExcelUtils_Aspose.Excel2DataTable(path);
-            this.dg.DataContext = dt;
+            //string path = @"D:\HoweDesktop\水路发运单.xlsx";
+            //System.Data.DataTable dt = new System.Data.DataTable();
+            //// System.Data.DataTable dt = Util.Excel.ExcelUtils_Aspose.Excel2DataTable(path);
+            //this.dg.DataContext = dt;
         }
     }
 }
