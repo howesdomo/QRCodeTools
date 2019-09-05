@@ -20,7 +20,10 @@ namespace QRCodeCreator
     /// </summary>
     public partial class MainWindow : Window
     {
-        // private static object _Input_Lock_ = new object();
+        private static object _Input_Lock_ = new object();
+
+        System.Timers.Timer mTimer = new System.Timers.Timer();
+
 
         ZXing.BarcodeWriter writer;
 
@@ -47,6 +50,41 @@ namespace QRCodeCreator
             initEvent();
 
             this.txtQRCodeContent.AppendText("测试");
+
+            mTimer.Interval = 1000;
+            mTimer.Elapsed += mTimer_Elapsed;
+            mTimer.Start(); // TODO stop
+        }
+
+        DateTime inputDateTime1 = DateTime.Now; // 最后一次用户输入文字的时间
+        DateTime? executeDateTime = null; // 最后一次程序执行生成二维码的时间
+
+        private void mTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            lock (_Input_Lock_)
+            {
+                DateTime now = DateTime.Now;
+
+                string msg = $"进入 _Input_Lock_";
+                System.Diagnostics.Debug.WriteLine(msg);
+
+                if (executeDateTime.HasValue == true)
+                {
+                    if (inputDateTime1.Add(TimeSpan.FromSeconds(1)) < now)
+                    {
+                        msg = $"输入得太快了, 不会生产二维码";
+                        System.Diagnostics.Debug.WriteLine(msg);
+
+                        return;
+                    }
+                }
+
+                this.Dispatcher.Invoke(new Action(() =>
+                {
+                    this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(this.txtQRCodeContent));
+                    executeDateTime = now;
+                }));
+            }
         }
 
         private void initEvent()
@@ -153,8 +191,9 @@ namespace QRCodeCreator
 
         void txtQRCodeContent_TextChanged(object sender, TextChangedEventArgs e)
         {
-            RichTextBox target = sender as RichTextBox;
-            this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(target));
+            inputDateTime1 = DateTime.Now;
+            //RichTextBox target = sender as RichTextBox;
+            //this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(target));
         }
 
         private BitmapSource drawQRCode(string content)
@@ -254,7 +293,7 @@ namespace QRCodeCreator
             }
         }
 
-        
+
 
         private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
         {
