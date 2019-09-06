@@ -22,10 +22,9 @@ namespace QRCodeCreator
     {
         private static object _Input_Lock_ = new object();
 
-        System.Timers.Timer mTimer = new System.Timers.Timer();
+        System.Timers.Timer mTimer { get; set; } = new System.Timers.Timer();
 
-
-        ZXing.BarcodeWriter writer;
+        ZXing.BarcodeWriter mBarcodeWriter { get; set; }
 
         public MainWindow()
         {
@@ -33,7 +32,7 @@ namespace QRCodeCreator
 
             this.Title = $"二维码生成器 - V {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
 
-            writer = new ZXing.BarcodeWriter();
+            mBarcodeWriter = new ZXing.BarcodeWriter();
 
             ZXing.QrCode.QrCodeEncodingOptions options = new ZXing.QrCode.QrCodeEncodingOptions
             {
@@ -44,47 +43,12 @@ namespace QRCodeCreator
                 ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.L,
             };
 
-            writer.Format = ZXing.BarcodeFormat.QR_CODE;
-            writer.Options = options;
+            mBarcodeWriter.Format = ZXing.BarcodeFormat.QR_CODE;
+            mBarcodeWriter.Options = options;
 
             initEvent();
 
-            this.txtQRCodeContent.AppendText("测试");
-
-            mTimer.Interval = 1000;
-            mTimer.Elapsed += mTimer_Elapsed;
-            mTimer.Start(); // TODO stop
-        }
-
-        DateTime inputDateTime1 = DateTime.Now; // 最后一次用户输入文字的时间
-        DateTime? executeDateTime = null; // 最后一次程序执行生成二维码的时间
-
-        private void mTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            lock (_Input_Lock_)
-            {
-                DateTime now = DateTime.Now;
-
-                string msg = $"进入 _Input_Lock_";
-                System.Diagnostics.Debug.WriteLine(msg);
-
-                if (executeDateTime.HasValue == true)
-                {
-                    if (inputDateTime1.Add(TimeSpan.FromSeconds(1)) < now)
-                    {
-                        msg = $"输入得太快了, 不会生产二维码";
-                        System.Diagnostics.Debug.WriteLine(msg);
-
-                        return;
-                    }
-                }
-
-                this.Dispatcher.Invoke(new Action(() =>
-                {
-                    this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(this.txtQRCodeContent));
-                    executeDateTime = now;
-                }));
-            }
+            this.txtQRCodeContent.AppendText("测试");                        
         }
 
         private void initEvent()
@@ -94,9 +58,11 @@ namespace QRCodeCreator
             this.Closed += new EventHandler(MainWindow_Closed);
             this.img.MouseDown += new MouseButtonEventHandler(img_MouseDown);
 
-
             this.Activated += MainWindow_Activated;
-            // this.LocationChanged += MainWindow_LocationChanged;
+
+            mTimer.Interval = 1000;
+            mTimer.Elapsed += mTimer_Elapsed_txtQRCodeContent;
+            mTimer.Start();
 
             // BusinessLogic
             this.txtQRCodeContent.TextChanged += txtQRCodeContent_TextChanged;
@@ -105,6 +71,8 @@ namespace QRCodeCreator
 
             this.btnImportExcel.Click += BtnImportExcel_Click;
         }
+
+        #region UI 事件
 
         private void MainWindow_Activated(object sender, EventArgs e)
         {
@@ -116,12 +84,60 @@ namespace QRCodeCreator
         {
             this.img.Source = null;
             closeAllFrmViewImage();
-            deleteAllTempFile();
+
+            mTimer.Elapsed -= mTimer_Elapsed_txtQRCodeContent;
+            mTimer.Stop();
         }
 
         void txtQRCodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             this.Height = 462 + e.NewSize.Height - 21.84;
+        }
+
+        void txtQRCodeContent_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            lastInputDateTime = DateTime.Now;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 获取 RichTextbox 信息
+        /// </summary>
+        /// <param name="rtb"></param>
+        /// <returns></returns>
+        private string getDocumentStringFormRichTextBox(RichTextBox rtb)
+        {
+            TextRange textRange = new TextRange(rtb.Document.ContentStart, rtb.Document.ContentEnd);
+            string r = textRange.Text;
+
+            // 减少系统抛错
+            if (r.Length > 2) // 由于 RichTextBox 自带\r\n 故去掉2位
+            {
+                r = r.Substring(0, r.Length - 2);
+            }
+
+            return r;
+        }
+
+        #region 下拉框选项更改后, 获取最新 Writer 配置
+
+        private void optionChanged()
+        {
+            Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string> item = getSelectedOptions();
+
+            ZXing.QrCode.QrCodeEncodingOptions options = new ZXing.QrCode.QrCodeEncodingOptions
+            {
+                DisableECI = true,
+                CharacterSet = item.Item2,
+                Width = 870,
+                Height = 870,
+                ErrorCorrection = item.Item1
+            };
+
+            mBarcodeWriter.Options = options;
+
+            drawQRCode();
         }
 
         private Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string> getSelectedOptions()
@@ -154,49 +170,20 @@ namespace QRCodeCreator
             return new Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string>(ecl, characterSet);
         }
 
-        private void optionChanged()
+        #endregion
+
+        #region 绘制二维码
+
+        private void drawQRCode()
         {
-            Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string> item = getSelectedOptions();
-
-            ZXing.QrCode.QrCodeEncodingOptions options = new ZXing.QrCode.QrCodeEncodingOptions
+            this.Dispatcher.Invoke(new Action(() =>
             {
-                DisableECI = true,
-                CharacterSet = item.Item2,
-                Width = 870,
-                Height = 870,
-                ErrorCorrection = item.Item1
-            };
-
-            writer.Options = options;
-
-            this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(this.txtQRCodeContent));
+                string content = this.getDocumentStringFormRichTextBox(this.txtQRCodeContent);
+                this.img.Source = zxingDrawQRCode(content);
+            }));
         }
 
-        private string getDocumentStringFormRichTextBox(RichTextBox rtb)
-        {
-            TextRange textRange = new TextRange(rtb.Document.ContentStart, rtb.Document.ContentEnd);
-            string r = textRange.Text;
-            try
-            {
-                // 由于 RichTextBox 自带\r\n 故去掉2位
-                r = r.Substring(0, r.Length - 2);
-            }
-            catch (Exception)
-            {
-                // MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                r = textRange.Text;
-            }
-            return r;
-        }
-
-        void txtQRCodeContent_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            inputDateTime1 = DateTime.Now;
-            //RichTextBox target = sender as RichTextBox;
-            //this.img.Source = drawQRCode(this.getDocumentStringFormRichTextBox(target));
-        }
-
-        private BitmapSource drawQRCode(string content)
+        private BitmapSource zxingDrawQRCode(string content)
         {
             if (string.IsNullOrWhiteSpace(content) == true)
             {
@@ -204,69 +191,125 @@ namespace QRCodeCreator
             }
             else
             {
-                QRCodeModel qrCodeModel = new QRCodeModel();
-                qrCodeModel.ID = Guid.NewGuid();
-                qrCodeModel.Content = content;
-                qrCodeModel.UpdatedTime = DateTime.Now;
-                qrCodeModel.ErrorCorrectionLevel = ZXing.QrCode.Internal.ErrorCorrectionLevel.L; // TODO :
-                qrCodeModel.CharacterSet = "UTF8";
-
-                System.Drawing.Bitmap bitmap = writer.Write(content);
-                BitmapSource r = BitmapToBitmapImage(bitmap);
+                System.Drawing.Bitmap bitmap = mBarcodeWriter.Write(content);
+                BitmapSource r = bitmap2BitmapImage(bitmap);
                 bitmap.Dispose();
                 return r;
             }
         }
 
-        /// <summary>
-        /// 条码图片临时存放路径
-        /// </summary>
-        string mTempDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HoweSoftware", "QRCodeCreator", "temp");
-
-        private BitmapSource BitmapToBitmapImage(System.Drawing.Bitmap bitmap)
+        private BitmapSource bitmap2BitmapImage(System.Drawing.Bitmap bitmap)
         {
-            if (System.IO.Directory.Exists(mTempDirectory) == false)
-            {
-                System.IO.Directory.CreateDirectory(mTempDirectory);
-            }
-
-            BitmapImage bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            BitmapImage r = new BitmapImage();
+            r.BeginInit();
+            r.CacheOption = BitmapCacheOption.OnLoad;
             System.IO.MemoryStream ms = new System.IO.MemoryStream();
             bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            bitmapImage.StreamSource = ms;
-            bitmapImage.EndInit();
+            r.StreamSource = ms;
+            r.EndInit();
 
-            return bitmapImage;
+            return r;
         }
 
-        private List<FrmViewImage> mFrmViewImageList = new List<FrmViewImage>();
+        #endregion
 
-        private DateTime? mouseDownDateTime = null;
+        #region 监控输入时间 减少生成二维码的次数
 
-        void img_MouseDown(object sender, MouseButtonEventArgs e)
+        DateTime? lastInputDateTime = null;
+        DateTime? secondLastInputDateTime = null;
+
+        List<DateTime> inputDateTimeList = new List<DateTime>();
+
+        private void mTimer_Elapsed_txtQRCodeContent(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (mouseDownDateTime.HasValue == true)
+            lock (_Input_Lock_)
             {
-                DateTime now = DateTime.Now;
-                double value = TimeSpan.FromTicks(now.Ticks).TotalMilliseconds - TimeSpan.FromTicks(mouseDownDateTime.Value.Ticks).TotalMilliseconds;
-                if (value.CompareTo(1000) < 0)
+                DateTime intoLockMethodDateTime = DateTime.Now;
+
+                string msg = $"lock (_Input_Lock_)";
+                System.Diagnostics.Debug.WriteLine(msg);
+
+                if (lastInputDateTime.HasValue == false)
                 {
-                    mouseDownDateTime = null;
-
-                    // 获取当前鼠标位置
-                    Point mousePoint = Mouse.GetPosition(e.Source as FrameworkElement);
-
-                    FrmViewImage frm = new FrmViewImage(mousePoint.X + this.Top, mousePoint.Y + this.Left, this.getDocumentStringFormRichTextBox(this.txtQRCodeContent), ((BitmapSource)img.Source).CloneCurrentValue());
-                    mFrmViewImageList.Add(frm);
-                    frm.Show();
+                    msg = $"lastInputDateTime == null";
+                    System.Diagnostics.Debug.WriteLine(msg);
 
                     return;
                 }
-            }
 
-            mouseDownDateTime = DateTime.Now;
+                if (secondLastInputDateTime.HasValue == false)
+                {
+                    secondLastInputDateTime = lastInputDateTime;
+
+                    msg = $"=== 通过 === 校验, secondLastInputDateTime == null";
+                    System.Diagnostics.Debug.WriteLine(msg);
+
+                    lastInputDateTime = null;
+                    drawQRCode();
+                    return;
+                }
+
+                // 1 两次输入的时间在 1 秒之内
+                if (new TimeSpan(lastInputDateTime.Value.Ticks - secondLastInputDateTime.Value.Ticks).TotalMilliseconds < TimeSpan.FromMilliseconds(1000).TotalMilliseconds)
+                {
+                    secondLastInputDateTime = lastInputDateTime;
+
+                    msg = $"时间间隔校验1 *** 失败 ***";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    return;
+                }
+
+                // 2 最后一次输入时间 和 intoLockMethod 隔现在也在一秒之内
+                if (new TimeSpan(intoLockMethodDateTime.Ticks - lastInputDateTime.Value.Ticks).TotalMilliseconds < TimeSpan.FromMilliseconds(1000).TotalMilliseconds)
+                {
+                    msg = $"时间间隔校验2 *** 失败 ***";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    return;
+                }
+
+                msg = $"=== 通过 === 校验";
+                System.Diagnostics.Debug.WriteLine(msg);
+
+                // 通过验证执行方法
+                lastInputDateTime = null;
+                secondLastInputDateTime = null;
+                drawQRCode();
+            }
+        }
+
+        #endregion
+
+        #region 生成窗口 ( 1秒内对准图片控件点击左键2次, 生成窗口 )
+
+        private List<FrmViewImage> mFrmViewImageList = new List<FrmViewImage>();
+
+        private DateTime? mMouseDownDateTime = null;
+
+        void img_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                if (mMouseDownDateTime.HasValue == true)
+                {
+                    DateTime now = DateTime.Now;
+                    double value = TimeSpan.FromTicks(now.Ticks).TotalMilliseconds - TimeSpan.FromTicks(mMouseDownDateTime.Value.Ticks).TotalMilliseconds;
+                    if (value.CompareTo(1000) < 0)
+                    {
+                        mMouseDownDateTime = null;
+
+                        // 获取当前鼠标位置
+                        Point mousePoint = Mouse.GetPosition(e.Source as FrameworkElement);
+
+                        FrmViewImage frm = new FrmViewImage(mousePoint.X + this.Top, mousePoint.Y + this.Left, this.getDocumentStringFormRichTextBox(this.txtQRCodeContent), ((BitmapSource)img.Source).CloneCurrentValue());
+                        mFrmViewImageList.Add(frm);
+                        frm.Show();
+
+                        return;
+                    }
+                }
+
+                mMouseDownDateTime = DateTime.Now;
+            }
         }
 
         private void closeAllFrmViewImage()
@@ -277,29 +320,17 @@ namespace QRCodeCreator
             }
         }
 
-        private void deleteAllTempFile()
-        {
-            foreach (var toDelete in System.IO.Directory.GetFiles(this.mTempDirectory))
-            {
-                try
-                {
-                    System.IO.File.Delete(toDelete); // TODO 解决文件占用的问题
-                }
-                catch (Exception ex)
-                {
-                    string msg = $"{ex.GetFullInfo()}";
-                    System.Diagnostics.Debug.WriteLine(msg);
-                }
-            }
-        }
+        #endregion
 
-
+        #region 待处理 导入Excel文件
 
         private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
         {
             ImportExcel frm = new ImportExcel(this);
             frm.Show();
         }
+
+        #endregion
     }
 
 }

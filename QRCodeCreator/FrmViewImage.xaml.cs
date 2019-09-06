@@ -137,10 +137,6 @@ namespace QRCodeCreator
             {
                 ContextMenu cm = new ContextMenu();
 
-                //MenuItem mi_QRCodeText = new MenuItem();
-                //mi_QRCodeText.Header = mQRCodeTextContent;
-                //mi_QRCodeText.IsEnabled = false;
-
                 MenuItem mi_copyQRCodeText = new MenuItem();
                 mi_copyQRCodeText.Header = "复制QRCode文本";
                 mi_copyQRCodeText.Click += (a, b) => { Clipboard.SetText(mQRCodeTextContent); };
@@ -182,7 +178,11 @@ namespace QRCodeCreator
 
                 img.ContextMenu = cm;
             }
-
+            else
+            {
+                // 更新图片大小信息
+                (img.ContextMenu.Items[1] as MenuItem).Header = "{0:N0} x {1:N0}".Format(Math.Floor(this.Width), Math.Floor(this.Height));
+            }
         }
 
         #endregion
