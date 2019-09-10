@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -18,26 +19,124 @@ namespace QRCodeCreator
     /// </summary>
     public partial class ImportExcel : Window
     {
-        private MainWindow frmMain { get; set; }
+        public EventHandler<SelectedCellEventArgs> SelectedCell;
 
-        public ImportExcel(MainWindow _mainWindow)
+        private void OnSelectedCell(string value)
+        {
+            if (SelectedCell != null)
+            {
+                SelectedCell.Invoke(this, new SelectedCellEventArgs(value));
+            }
+        }
+
+        public ImportExcel()
         {
             InitializeComponent();
-            this.frmMain = _mainWindow;
             initEvent();
         }
 
         private void initEvent()
         {
-            btnImport.Click += BtnImport_Click;
+            ucsfExcelFile.SuccessEventHandler += new EventHandler<EventArgs>(excelFile_ImportSuccess);
         }
 
-        private void BtnImport_Click(object sender, RoutedEventArgs e)
+        private void excelFile_ImportSuccess(object sender, EventArgs e)
         {
-            //string path = @"D:\HoweDesktop\水路发运单.xlsx";
-            //System.Data.DataTable dt = new System.Data.DataTable();
-            //// System.Data.DataTable dt = Util.Excel.ExcelUtils_Aspose.Excel2DataTable(path);
-            //this.dg.DataContext = dt;
+            var ds = Util.Excel.ExcelUtils_Aspose.Excel2DataSetAsString
+            (
+                path: ucsfExcelFile.FileName,
+                exportColumnName: true
+            );
+
+            tabCtrl.Items.Clear();
+
+            for (int i = 0; i < ds.Tables.Count; i++)
+            {
+                TabItem toAdd = new TabItem();
+                toAdd.Header = ds.Tables[i].TableName;
+
+                Grid grid = new Grid();
+
+                DataGrid dg = new DataGrid();
+                dg.AutoGenerateColumns = true;
+                dg.IsReadOnly = true;
+                dg.CanUserSortColumns = true;
+
+                dg.CanUserAddRows = false;
+                dg.CanUserDeleteRows = false;
+                dg.SelectionMode = DataGridSelectionMode.Extended;
+                dg.SelectionUnit = DataGridSelectionUnit.CellOrRowHeader;
+
+                dg.MouseUp += (senderObj, args) =>
+                {                   
+                    if (args.ChangedButton == MouseButton.Left)
+                    {
+                        string s = @"|";
+                        StringBuilder sb = new StringBuilder();
+
+                        DataGrid target = senderObj as DataGrid;
+                        System.Diagnostics.Debug.WriteLine("*************************");
+                        for (int index = 0; index < target.SelectedCells.Count; index++)
+                        {
+                            var item = target.SelectedCells[index];
+                            string msg = GetCellValue(item).ToString();
+                            System.Diagnostics.Debug.WriteLine(msg);
+                            sb.Append(msg);
+                            if (target.SelectedCells.Count > 1)
+                            {
+                                sb.Append(s);
+                            }                           
+                        }
+                        System.Diagnostics.Debug.WriteLine("==========================");
+
+                        this.OnSelectedCell(sb.ToString());
+                    }
+                };
+
+                dg.ItemsSource = ds.Tables[i].DefaultView; // 简化以上获取 DataView 的方式
+
+                grid.Children.Add(dg);
+
+                toAdd.Content = grid;
+
+                tabCtrl.Items.Add(toAdd);
+            }
+
+            tabCtrl.SelectedIndex = -1;
+
+            if (tabCtrl.Items.Count > 0)
+            {
+                tabCtrl.SelectedIndex = 0;
+            }
+        }
+
+
+        public object GetCellValue(DataGridCellInfo dataGridCellInfo)
+        {
+            object r = null;
+
+            if (dataGridCellInfo != null)
+            {
+                DataGridBoundColumn column = dataGridCellInfo.Column as DataGridBoundColumn;
+                if (column != null)
+                {
+                    FrameworkElement element = new FrameworkElement()
+                    {
+                        DataContext = dataGridCellInfo.Item
+                    };
+
+                    BindingOperations.SetBinding
+                    (
+                        target: element,
+                        dp: FrameworkElement.TagProperty,
+                        binding: column.Binding
+                    );
+
+                    r = element.Tag;
+                }
+            }
+
+            return r;
         }
     }
 }

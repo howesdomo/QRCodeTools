@@ -26,6 +26,8 @@ namespace QRCodeCreator
 
         ZXing.BarcodeWriter mBarcodeWriter { get; set; }
 
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,7 +50,7 @@ namespace QRCodeCreator
 
             initEvent();
 
-            this.txtQRCodeContent.AppendText("测试");                        
+            this.txtQRCodeContent.AppendText("测试");
         }
 
         private void initEvent()
@@ -215,6 +217,8 @@ namespace QRCodeCreator
 
         #region 监控输入时间 减少生成二维码的次数
 
+        bool isShowLog = false;
+
         DateTime? lastInputDateTime = null;
         DateTime? secondLastInputDateTime = null;
 
@@ -227,12 +231,12 @@ namespace QRCodeCreator
                 DateTime intoLockMethodDateTime = DateTime.Now;
 
                 string msg = $"lock (_Input_Lock_)";
-                System.Diagnostics.Debug.WriteLine(msg);
+                if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
 
                 if (lastInputDateTime.HasValue == false)
                 {
                     msg = $"lastInputDateTime == null";
-                    System.Diagnostics.Debug.WriteLine(msg);
+                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
 
                     return;
                 }
@@ -242,7 +246,7 @@ namespace QRCodeCreator
                     secondLastInputDateTime = lastInputDateTime;
 
                     msg = $"=== 通过 === 校验, secondLastInputDateTime == null";
-                    System.Diagnostics.Debug.WriteLine(msg);
+                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
 
                     lastInputDateTime = null;
                     drawQRCode();
@@ -255,7 +259,7 @@ namespace QRCodeCreator
                     secondLastInputDateTime = lastInputDateTime;
 
                     msg = $"时间间隔校验1 *** 失败 ***";
-                    System.Diagnostics.Debug.WriteLine(msg);
+                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
                     return;
                 }
 
@@ -263,12 +267,12 @@ namespace QRCodeCreator
                 if (new TimeSpan(intoLockMethodDateTime.Ticks - lastInputDateTime.Value.Ticks).TotalMilliseconds < TimeSpan.FromMilliseconds(1000).TotalMilliseconds)
                 {
                     msg = $"时间间隔校验2 *** 失败 ***";
-                    System.Diagnostics.Debug.WriteLine(msg);
+                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
                     return;
                 }
 
                 msg = $"=== 通过 === 校验";
-                System.Diagnostics.Debug.WriteLine(msg);
+                if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
 
                 // 通过验证执行方法
                 lastInputDateTime = null;
@@ -326,8 +330,16 @@ namespace QRCodeCreator
 
         private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
         {
-            ImportExcel frm = new ImportExcel(this);
+            ImportExcel frm = new ImportExcel();
+            frm.SelectedCell += new EventHandler<SelectedCellEventArgs>(handle_SelectedCell);
             frm.Show();
+        }
+
+        private void handle_SelectedCell(object sender, SelectedCellEventArgs args)
+        {
+            var textRange = new TextRange(this.txtQRCodeContent.Document.ContentStart, this.txtQRCodeContent.Document.ContentEnd);
+            textRange.Text = args.SelectedValue;
+            drawQRCode();
         }
 
         #endregion

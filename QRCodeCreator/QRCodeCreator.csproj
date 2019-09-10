@@ -85,6 +85,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WPFControls, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WPFControls.1.0.2\lib\net40\WPFControls.dll</HintPath>
+    </Reference>
     <Reference Include="zxing, Version=0.16.4.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
       <HintPath>..\packages\ZXing.Net.0.16.4\lib\net40\zxing.dll</HintPath>
     </Reference>
@@ -101,6 +104,7 @@
       <DependentUpon>ImportExcel.xaml</DependentUpon>
     </Compile>
     <Compile Include="QRCodeModel.cs" />
+    <Compile Include="SelectedCellEventArgs.cs" />
     <Page Include="FrmAdvanceFunc.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -160,6 +164,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\logo.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\HoweUtil\Util.Excel.Aspose\Util.Excel.Aspose.csproj">
+      <Project>{5adbf989-8c77-4ba9-8718-948e65eabd77}</Project>
+      <Name>Util.Excel.Aspose</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
