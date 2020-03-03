@@ -71,8 +71,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\HoweUtil\Util.Excel.Aspose\bin\Debug\Util.Excel.Aspose.dll</HintPath>
     </Reference>
-    <Reference Include="Util.HowesDOMO, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Util.HowesDOMO.1.0.4\lib\net40\Util.HowesDOMO.dll</HintPath>
+    <Reference Include="Util.HowesDOMO, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Util.HowesDOMO.1.0.6\lib\net40\Util.HowesDOMO.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

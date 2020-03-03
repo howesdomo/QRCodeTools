@@ -20,13 +20,7 @@ namespace QRCodeCreator
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static object _Input_Lock_ = new object();
-
-        System.Timers.Timer mTimer { get; set; } = new System.Timers.Timer();
-
         ZXing.BarcodeWriter mBarcodeWriter { get; set; }
-
-
 
         public MainWindow()
         {
@@ -62,10 +56,6 @@ namespace QRCodeCreator
 
             this.Activated += MainWindow_Activated;
 
-            mTimer.Interval = 1000;
-            mTimer.Elapsed += mTimer_Elapsed_txtQRCodeContent;
-            mTimer.Start();
-
             // BusinessLogic
             this.txtQRCodeContent.TextChanged += txtQRCodeContent_TextChanged;
             this.cbErrorCorrectionLevel.SelectionChanged += (o, e) => { optionChanged(); };
@@ -86,9 +76,6 @@ namespace QRCodeCreator
         {
             this.img.Source = null;
             closeAllFrmViewImage();
-
-            mTimer.Elapsed -= mTimer_Elapsed_txtQRCodeContent;
-            mTimer.Stop();
         }
 
         void txtQRCodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -96,9 +83,11 @@ namespace QRCodeCreator
             this.Height = 462 + e.NewSize.Height - 21.84;
         }
 
+        Util.ActionUtils.DebounceAction mDebounceAction = new Util.ActionUtils.DebounceAction();
+
         void txtQRCodeContent_TextChanged(object sender, TextChangedEventArgs e)
         {
-            lastInputDateTime = DateTime.Now;
+            mDebounceAction.Debounce(1000, drawQRCode, this.Dispatcher);
         }
 
         #endregion
@@ -211,74 +200,6 @@ namespace QRCodeCreator
             r.EndInit();
 
             return r;
-        }
-
-        #endregion
-
-        #region 监控输入时间 减少生成二维码的次数
-
-        bool isShowLog = false;
-
-        DateTime? lastInputDateTime = null;
-        DateTime? secondLastInputDateTime = null;
-
-        List<DateTime> inputDateTimeList = new List<DateTime>();
-
-        private void mTimer_Elapsed_txtQRCodeContent(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            lock (_Input_Lock_)
-            {
-                DateTime intoLockMethodDateTime = DateTime.Now;
-
-                string msg = $"lock (_Input_Lock_)";
-                if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-
-                if (lastInputDateTime.HasValue == false)
-                {
-                    msg = $"lastInputDateTime == null";
-                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-
-                    return;
-                }
-
-                if (secondLastInputDateTime.HasValue == false)
-                {
-                    secondLastInputDateTime = lastInputDateTime;
-
-                    msg = $"=== 通过 === 校验, secondLastInputDateTime == null";
-                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-
-                    lastInputDateTime = null;
-                    drawQRCode();
-                    return;
-                }
-
-                // 1 两次输入的时间在 1 秒之内
-                if (new TimeSpan(lastInputDateTime.Value.Ticks - secondLastInputDateTime.Value.Ticks).TotalMilliseconds < TimeSpan.FromMilliseconds(1000).TotalMilliseconds)
-                {
-                    secondLastInputDateTime = lastInputDateTime;
-
-                    msg = $"时间间隔校验1 *** 失败 ***";
-                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-                    return;
-                }
-
-                // 2 最后一次输入时间 和 intoLockMethod 隔现在也在一秒之内
-                if (new TimeSpan(intoLockMethodDateTime.Ticks - lastInputDateTime.Value.Ticks).TotalMilliseconds < TimeSpan.FromMilliseconds(1000).TotalMilliseconds)
-                {
-                    msg = $"时间间隔校验2 *** 失败 ***";
-                    if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-                    return;
-                }
-
-                msg = $"=== 通过 === 校验";
-                if (isShowLog) { System.Diagnostics.Debug.WriteLine(msg); }
-
-                // 通过验证执行方法
-                lastInputDateTime = null;
-                secondLastInputDateTime = null;
-                drawQRCode();
-            }
         }
 
         #endregion
