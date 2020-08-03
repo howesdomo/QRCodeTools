@@ -71,14 +71,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\HoweUtil\Util.Excel.Aspose\bin\Debug\Util.Excel.Aspose.dll</HintPath>
     </Reference>
-    <Reference Include="Util.HowesDOMO, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Util.HowesDOMO.1.0.6\lib\net40\Util.HowesDOMO.dll</HintPath>
+    <Reference Include="Util.HowesDOMO, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Util.HowesDOMO.1.0.11\lib\net40\Util.HowesDOMO.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="WPFControls, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WPFControls.1.0.2\lib\net40\WPFControls.dll</HintPath>
+    <Reference Include="WPFControls, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WPFControls.1.0.4\lib\net40\WPFControls.dll</HintPath>
     </Reference>
     <Reference Include="zxing, Version=0.16.4.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
       <HintPath>..\packages\ZXing.Net.0.16.4\lib\net40\zxing.dll</HintPath>

@@ -62,7 +62,13 @@ namespace QRCodeCreator
             this.cbCharacterSet.SelectionChanged += (o, e) => { optionChanged(); };
 
             this.btnImportExcel.Click += BtnImportExcel_Click;
+
+            this.btnDecode.Click += BtnDecode_Click;
+
+            txtDecodeContent.MouseDoubleClick += TxtDecodeContent_MouseDoubleClick;
         }
+
+
 
         #region UI 事件
 
@@ -261,6 +267,58 @@ namespace QRCodeCreator
             var textRange = new TextRange(this.txtQRCodeContent.Document.ContentStart, this.txtQRCodeContent.Document.ContentEnd);
             textRange.Text = args.SelectedValue;
             drawQRCode();
+        }
+
+        #endregion
+
+        #region 解析粘贴板的图像
+
+        ZXing.BarcodeReader mBarcodeReader { get; set; } = new ZXing.BarcodeReader();
+
+        void BtnDecode_Click(object sender, RoutedEventArgs e)
+        {
+            System.Drawing.Bitmap bitmap = null;
+            try
+            {
+                bitmap = Util.Drawing.DrawingUtils.BitmapSource2Bitmap(Clipboard.GetImage());
+            }
+            catch
+            {
+                return;
+            }
+
+            var r0 = mBarcodeReader.Decode(bitmap);
+            if (r0 == null)
+            {
+                txtDecodeContent.Text = string.Empty;
+                txtDecodeFormat.Text = string.Empty;
+
+                MessageBox.Show("图像不能被解析");
+            }
+            else
+            {
+                txtDecodeContent.Text = r0.Text;
+
+                switch (r0.BarcodeFormat)
+                {
+                    case ZXing.BarcodeFormat.QR_CODE:
+                        {
+                            r0.ResultMetadata.TryGetValue(ZXing.ResultMetadataType.ERROR_CORRECTION_LEVEL, out object v);
+                            txtDecodeFormat.Text = $"条码类型: {r0.BarcodeFormat.ToString()}; 纠错等级: {v.ToString()}";
+                        }
+                        break;
+                    default:
+                        {
+                            txtDecodeFormat.Text = $"条码类型: {r0.BarcodeFormat.ToString()}";
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void TxtDecodeContent_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            (sender as TextBox).SelectAll();
         }
 
         #endregion

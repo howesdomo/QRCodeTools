@@ -12,9 +12,12 @@
             <RowDefinition />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="370" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Image
             x:Name="img"
@@ -39,7 +42,11 @@
                 <ComboBoxItem Tag="L">L-恢复7%</ComboBoxItem>
                 <ComboBoxItem Tag="M">M-恢复15%</ComboBoxItem>
                 <ComboBoxItem Tag="Q">Q-恢复25%</ComboBoxItem>
-                <ComboBoxItem Tag="H" IsSelected="True">H-恢复30%</ComboBoxItem>
+                <ComboBoxItem
+                    IsSelected="True"
+                    Tag="H">
+                    H-恢复30%
+                </ComboBoxItem>
             </ComboBox>
 
             <TextBlock
@@ -59,7 +66,81 @@
                 <ComboBoxItem Tag="gb18030">简体中文(GB-18030)</ComboBoxItem>
             </ComboBox>
 
-            <Button x:Name="btnImportExcel">E</Button>
+
+
         </StackPanel>
+
+        <StackPanel
+            Grid.Row="3"
+            Orientation="Horizontal">
+            <Button x:Name="btnDecode">解析剪贴板二维码</Button>
+            <TextBlock Width="200" />
+            <Button x:Name="btnImportExcel">读取Excel文件</Button>
+        </StackPanel>
+
+        <TextBox
+            x:Name="txtDecodeContent"
+            Grid.Row="4"
+            IsReadOnly="True">
+            <TextBox.Resources>
+                <VisualBrush
+                    x:Key="txtDecodeContent_Placeholder"
+                    AlignmentX="Left"
+                    Stretch="None"
+                    TileMode="None">
+                    <VisualBrush.Visual>
+                        <TextBlock
+                            FontStyle="Italic"
+                            Foreground="Red"
+                            Text="解析条码内容" />
+                    </VisualBrush.Visual>
+                </VisualBrush>
+            </TextBox.Resources>
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="{x:Null}">
+                            <Setter Property="Background" Value="{StaticResource txtDecodeContent_Placeholder}" />
+                        </Trigger>
+                        <Trigger Property="Text" Value="">
+                            <Setter Property="Background" Value="{StaticResource txtDecodeContent_Placeholder}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+
+        <TextBox
+            x:Name="txtDecodeFormat"
+            Grid.Row="5"
+            IsReadOnly="True">
+            <TextBox.Resources>
+                <VisualBrush
+                    x:Key="txtDecodeFormat_Placeholder"
+                    AlignmentX="Left"
+                    Stretch="None"
+                    TileMode="None">
+                    <VisualBrush.Visual>
+                        <TextBlock
+                            FontStyle="Italic"
+                            Foreground="Red"
+                            Text="解析条码格式" />
+                    </VisualBrush.Visual>
+                </VisualBrush>
+            </TextBox.Resources>
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="{x:Null}">
+                            <Setter Property="Background" Value="{StaticResource txtDecodeFormat_Placeholder}" />
+                        </Trigger>
+                        <Trigger Property="Text" Value="">
+                            <Setter Property="Background" Value="{StaticResource txtDecodeFormat_Placeholder}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+
+        </TextBox>
     </Grid>
 </Window>
