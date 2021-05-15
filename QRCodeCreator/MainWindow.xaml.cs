@@ -20,6 +20,9 @@ namespace QRCodeCreator
     /// </summary>
     public partial class MainWindow : Window
     {
+        // TODO 一个超长的纯数字, 能生成二维码, 但无法正常解释
+        // 例如 23921238123912837198273891273987182379812893718923789127389179832798123891232738917983279812389123
+
         ZXing.BarcodeWriter mBarcodeWriter { get; set; }
 
         public MainWindow()
@@ -51,6 +54,7 @@ namespace QRCodeCreator
         {
             // UI
             this.txtQRCodeContent.SizeChanged += txtQRCodeContent_SizeChanged;
+            this.txtDecodeContent.SizeChanged += txtDecodeContent_SizeChanged;
             this.Closed += new EventHandler(MainWindow_Closed);
             this.img.MouseDown += new MouseButtonEventHandler(img_MouseDown);
 
@@ -70,6 +74,8 @@ namespace QRCodeCreator
 
 
 
+
+
         #region UI 事件
 
         private void MainWindow_Activated(object sender, EventArgs e)
@@ -86,7 +92,13 @@ namespace QRCodeCreator
 
         void txtQRCodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            this.Height = 462 + e.NewSize.Height - 21.84;
+            // this.Height = 462 + e.NewSize.Height - 21.84;
+            this.Height = 500 + e.NewSize.Height + txtDecodeContent.ActualHeight;
+        }
+
+        void txtDecodeContent_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            this.Height = 500 + txtQRCodeContent.ActualHeight + e.NewSize.Height;
         }
 
         Util.ActionUtils.DebounceAction mDebounceAction = new Util.ActionUtils.DebounceAction();
@@ -141,10 +153,9 @@ namespace QRCodeCreator
         {
             ZXing.QrCode.Internal.ErrorCorrectionLevel ecl = ZXing.QrCode.Internal.ErrorCorrectionLevel.L;
 
-            if (cbErrorCorrectionLevel.SelectedValue is ComboBoxItem)
+            if (cbErrorCorrectionLevel.SelectedValue is ComboBoxItem cbi1)
             {
-                ComboBoxItem cbi = cbErrorCorrectionLevel.SelectedValue as ComboBoxItem;
-                switch (cbi.Tag.ToString())
+                switch (cbi1.Tag.ToString())
                 {
                     case "L":
                         ecl = ZXing.QrCode.Internal.ErrorCorrectionLevel.L; break;
@@ -158,10 +169,53 @@ namespace QRCodeCreator
             }
 
             string characterSet = "UTF-8";
-            if (cbCharacterSet.SelectedValue is ComboBoxItem)
+            if (cbCharacterSet.SelectedValue is ComboBoxItem cbi2)
             {
-                ComboBoxItem cbi = cbCharacterSet.SelectedValue as ComboBoxItem;
-                characterSet = cbi.Tag.ToString();
+                string tempEncoding = cbi2.Content.ToString();
+                try
+                {
+                    characterSet = ZXing.Common.CharacterSetECI.getCharacterSetECIByName(tempEncoding).EncodingName;
+
+                    #region 知识点 ZXing.Common.CharacterSetECI
+
+                    // ZXing.Common.CharacterSetECI.getCharacterSetECIByName()
+                    // 从网页 https://zxing.github.io/zxing/apidocs/com/google/zxing/common/CharacterSetECI.html#UnicodeBigUnmarked
+                    // 了解到 zxing 只支持
+
+                    //ASCII
+                    //Big5
+                    //Cp1250
+                    //Cp1251
+                    //Cp1252
+                    //Cp1256
+                    //Cp437
+                    //EUC_KR
+                    //GB18030
+                    //ISO8859_1
+                    //ISO8859_10
+                    //ISO8859_11
+                    //ISO8859_13
+                    //ISO8859_14
+                    //ISO8859_15
+                    //ISO8859_16
+                    //ISO8859_2
+                    //ISO8859_3
+                    //ISO8859_4
+                    //ISO8859_5
+                    //ISO8859_6
+                    //ISO8859_7
+                    //ISO8859_8
+                    //ISO8859_9
+                    //SJIS
+                    //UnicodeBigUnmarked
+                    //UTF8
+
+                    #endregion
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"{ex.Message}\r\n编码{tempEncoding}不存在", "捕获异常");
+                }
             }
 
             return new Tuple<ZXing.QrCode.Internal.ErrorCorrectionLevel, string>(ecl, characterSet);
