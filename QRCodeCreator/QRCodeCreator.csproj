@@ -84,7 +84,6 @@
       <DependentUpon>ImportExcel.xaml</DependentUpon>
     </Compile>
     <Compile Include="QRCodeModel.cs" />
-    <Compile Include="SelectedCellEventArgs.cs" />
     <Page Include="FrmAdvanceFunc.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

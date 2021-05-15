@@ -19,13 +19,15 @@ namespace QRCodeCreator
     /// </summary>
     public partial class ImportExcel : Window
     {
-        public EventHandler<SelectedCellEventArgs> SelectedCell;
+        // TODO 生成长图片 或者 PDF文件, 代替 Bartender 
+
+        public EventHandler<EventArgs<string>> SelectedCell;
 
         private void OnSelectedCell(string value)
         {
             if (SelectedCell != null)
             {
-                SelectedCell.Invoke(this, new SelectedCellEventArgs(value));
+                SelectedCell.Invoke(this, new EventArgs<string>(value));
             }
         }
 

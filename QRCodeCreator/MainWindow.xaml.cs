@@ -312,14 +312,14 @@ namespace QRCodeCreator
         private void BtnImportExcel_Click(object sender, RoutedEventArgs e)
         {
             ImportExcel frm = new ImportExcel();
-            frm.SelectedCell += new EventHandler<SelectedCellEventArgs>(handle_SelectedCell);
+            frm.SelectedCell += new EventHandler<EventArgs<string>>(handle_SelectedCell);
             frm.Show();
         }
 
-        private void handle_SelectedCell(object sender, SelectedCellEventArgs args)
+        private void handle_SelectedCell(object sender, EventArgs<string> args)
         {
             var textRange = new TextRange(this.txtQRCodeContent.Document.ContentStart, this.txtQRCodeContent.Document.ContentEnd);
-            textRange.Text = args.SelectedValue;
+            textRange.Text = args.Value;
             drawQRCode();
         }
 
